@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" role="img" aria-labelledby="title desc">
+  <title id="title">G-Mini Agent Server architecture</title>
+  <desc id="desc">Clients (gmini CLI, desktop app, browser extension and devices) reach the core's remote API v1 through Tailscale or a TLS proxy; the core runs as a systemd user service or in Docker and keeps its data in GMINI_HOME.</desc>
+  <style>
+    :root { --bg: #ffffff; --panel: #f6f7f9; --stroke: #d0d5dd; --text: #1d2939; --muted: #667085; --accent: #1570ef; --accent-soft: #eff4ff; --ok: #067647; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d1117; --panel: #161b22; --stroke: #30363d; --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --accent-soft: #10213a; --ok: #3fb950; }
+    }
+    .bg { fill: var(--bg); }
+    .panel { fill: var(--panel); stroke: var(--stroke); stroke-width: 1; }
+    .box { fill: var(--bg); stroke: var(--stroke); stroke-width: 1; }
+    .core { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+    .title { font: 600 15px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text); }
+    .label { font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text); }
+    .small { font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
+    .mono { font: 12px ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--text); }
+    .line { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+    .accent-line { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+    .arrow { fill: var(--muted); }
+    .accent-arrow { fill: var(--accent); }
+    .dot { fill: var(--ok); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="arrow"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="accent-arrow"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="960" height="540" rx="12"/>
+
+  <!-- Clientes -->
+  <rect class="panel" x="24" y="24" width="250" height="492" rx="10"/>
+  <text class="title" x="44" y="54">Clients</text>
+
+  <rect class="box" x="44" y="72" width="210" height="76" rx="8"/>
+  <text class="label" x="60" y="98">CLI gmini</text>
+  <text class="small" x="60" y="118">Windows, Linux and macOS</text>
+  <text class="small" x="60" y="136">pair, chat, ask, task, say</text>
+
+  <rect class="box" x="44" y="164" width="210" height="76" rx="8"/>
+  <text class="label" x="60" y="190">Desktop app</text>
+  <text class="small" x="60" y="210">Delegates tasks to a</text>
+  <text class="small" x="60" y="228">paired server</text>
+
+  <rect class="box" x="44" y="256" width="210" height="64" rx="8"/>
+  <text class="label" x="60" y="282">Browser extension</text>
+  <text class="small" x="60" y="302">Chat and web actions</text>
+
+  <rect class="box" x="44" y="336" width="210" height="76" rx="8"/>
+  <text class="label" x="60" y="362">Devices</text>
+  <text class="small" x="60" y="382">ESP32, Raspberry Pi</text>
+  <text class="small" x="60" y="400">voice, face, LEDs, relays</text>
+
+  <rect class="box" x="44" y="428" width="210" height="68" rx="8"/>
+  <text class="label" x="60" y="454">Pairing</text>
+  <text class="small" x="60" y="474">6-digit code or QR</text>
+
+  <!-- Red -->
+  <rect class="panel" x="318" y="150" width="190" height="240" rx="10"/>
+  <text class="title" x="338" y="180">Network</text>
+  <rect class="box" x="336" y="196" width="154" height="78" rx="8"/>
+  <text class="label" x="352" y="222">Tailscale</text>
+  <text class="small" x="352" y="242">private 100.x IP,</text>
+  <text class="small" x="352" y="260">recommended</text>
+  <rect class="box" x="336" y="290" width="154" height="78" rx="8"/>
+  <text class="label" x="352" y="316">TLS proxy</text>
+  <text class="small" x="352" y="336">Caddy or similar,</text>
+  <text class="small" x="352" y="354">your own domain</text>
+
+  <!-- Flechas de clientes a la red -->
+  <path class="line" d="M254 110 C 290 110, 300 235, 334 235" marker-end="url(#a)"/>
+  <path class="line" d="M254 202 C 285 202, 300 240, 334 240" marker-end="url(#a)"/>
+  <path class="line" d="M254 288 C 285 288, 300 325, 334 325" marker-end="url(#a)"/>
+  <path class="line" d="M254 374 C 290 374, 300 332, 334 332" marker-end="url(#a)"/>
+
+  <!-- Núcleo -->
+  <rect class="panel" x="552" y="24" width="384" height="492" rx="10"/>
+  <text class="title" x="572" y="54">24/7 server</text>
+
+  <rect class="core" x="572" y="72" width="344" height="238" rx="10"/>
+  <circle class="dot" cx="592" cy="96" r="5"/>
+  <text class="label" x="604" y="101">G-Mini core (headless mode)</text>
+  <text class="mono" x="592" y="126">python -m backend.main --headless</text>
+
+  <rect class="box" x="592" y="142" width="304" height="68" rx="8"/>
+  <text class="label" x="608" y="166">Remote API v1</text>
+  <text class="mono" x="608" y="186">/api/v1/* REST + SSE</text>
+  <text class="mono" x="608" y="202">/api/v1/ws WebSocket</text>
+
+  <rect class="box" x="592" y="222" width="146" height="72" rx="8"/>
+  <text class="label" x="606" y="246">Agent</text>
+  <text class="small" x="606" y="266">models, skills,</text>
+  <text class="small" x="606" y="282">connectors, MCP</text>
+
+  <rect class="box" x="750" y="222" width="146" height="72" rx="8"/>
+  <text class="label" x="764" y="246">Tasks and voice</text>
+  <text class="small" x="764" y="266">cron, intervals,</text>
+  <text class="small" x="764" y="282">TTS, STT, alerts</text>
+
+  <!-- Flechas de la red al núcleo -->
+  <path class="accent-line" d="M490 235 C 530 235, 545 176, 588 176" marker-end="url(#b)"/>
+  <path class="accent-line" d="M490 329 C 535 329, 545 190, 588 190" marker-end="url(#b)"/>
+
+  <!-- Despliegue -->
+  <rect class="box" x="572" y="326" width="166" height="96" rx="8"/>
+  <text class="label" x="588" y="352">systemd --user</text>
+  <text class="small" x="588" y="372">install-server.sh from</text>
+  <text class="small" x="588" y="390">the core repository</text>
+  <text class="small" x="588" y="408">no sudo</text>
+
+  <rect class="box" x="750" y="326" width="166" height="96" rx="8"/>
+  <text class="label" x="766" y="352">Docker</text>
+  <text class="small" x="766" y="372">GHCR image,</text>
+  <text class="small" x="766" y="390">non-root user,</text>
+  <text class="small" x="766" y="408">healthcheck</text>
+
+  <rect class="box" x="572" y="438" width="344" height="58" rx="8"/>
+  <text class="label" x="588" y="462">GMINI_HOME</text>
+  <text class="small" x="588" y="482">config, conversations, tasks, devices, logs</text>
+  <path class="line" d="M655 422 L655 436" marker-end="url(#a)"/>
+  <path class="line" d="M833 422 L833 436" marker-end="url(#a)"/>
+</svg>
