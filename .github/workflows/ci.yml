@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Estilo (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "ruff>=0.6"
+      - run: ruff check src tests
+      - run: ruff format --check src tests
+
+  test:
+    name: Pruebas (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -e ".[dev,repl]"
+      - run: python -m pytest -q
+      - name: La CLI arranca
+        run: |
+          gmini --version
+          gmini --help
+
+  build:
+    name: Wheel y sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check --strict dist/*
+      - name: Instalar el wheel en un entorno limpio
+        run: |
+          python -m venv /tmp/wheel-env
+          /tmp/wheel-env/bin/pip install dist/*.whl
+          /tmp/wheel-env/bin/gmini --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  docker:
+    name: Imagen Docker con el núcleo real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Construir la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          tags: g-mini-agent-server:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Arrancar y esperar el healthcheck
+        run: |
+          docker run -d --name g-mini -p 127.0.0.1:8765:8765 --health-interval=5s g-mini-agent-server:ci
+          status=starting
+          for _ in $(seq 1 60); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' g-mini)
+            [ "$status" = healthy ] && break
+            sleep 3
+          done
+          echo "salud: $status"
+          [ "$status" = healthy ]
+          curl -fsS http://127.0.0.1:8765/api/v1/health
+      - name: gmini dentro del contenedor
+        run: docker exec g-mini gmini --plain status
+      - name: Emparejar la CLI del runner con el contenedor
+        env:
+          GMINI_CREDENTIAL_STORE: file
+          GMINI_PLAIN: "1"
+        run: |
+          python -m pip install .
+          code=$(docker exec g-mini gmini pair-code --host 127.0.0.1 --json | python -c "import json, sys; print(json.load(sys.stdin)['code'])")
+          gmini pair 127.0.0.1 "$code" --name ci
+          gmini status
+          gmini task add "Resume las noticias" --every 2h --title "Prueba de CI"
+          gmini task list
+          docker exec g-mini gmini devices list
+      - name: Registros del contenedor
+        if: always()
+        run: docker logs g-mini 2>&1 | tail -n 80

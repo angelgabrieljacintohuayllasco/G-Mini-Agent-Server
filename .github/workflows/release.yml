@@ -1,0 +1,108 @@
+name: Publicar versión
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/angelgabrieljacintohuayllasco/g-mini-agent-server
+  # Versión del núcleo que lleva la imagen; se cambia con la variable de repositorio GMINI_CORE_REF.
+  GMINI_CORE_REF: ${{ vars.GMINI_CORE_REF || 'v0.2.0' }}
+
+jobs:
+  dist:
+    name: Pruebas, wheel y sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: La etiqueta coincide con la versión del paquete
+        run: |
+          version=$(python -c "import re; print(re.search(r'__version__ = \"(.+?)\"', open('src/gmini_cli/__init__.py', encoding='utf-8').read()).group(1))")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "La etiqueta $GITHUB_REF_NAME no coincide con la versión $version"; exit 1; }
+      - run: python -m pip install -e ".[dev]" twine
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python -m twine check --strict dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    name: Release en GitHub
+    needs: dist
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Notas desde CHANGELOG.md
+        run: |
+          python - <<'EOF'
+          import os
+          import re
+
+          version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          match = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.S | re.M)
+          notes = match.group(1).strip() if match else f"Versión {version}."
+          open("release-notes.md", "w", encoding="utf-8").write(notes + "\n")
+          EOF
+      - name: Sumas SHA-256
+        run: cd dist && sha256sum * > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/SHA256SUMS
+
+  image:
+    name: Imagen en GHCR
+    needs: dist
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+          labels: |
+            io.github.g-mini.core-ref=${{ env.GMINI_CORE_REF }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: GMINI_CORE_REF=${{ env.GMINI_CORE_REF }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
