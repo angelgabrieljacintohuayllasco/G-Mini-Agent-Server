@@ -15,7 +15,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        GMINI_CORE_REF: ${GMINI_CORE_REF:-v0.3.0}
+        GMINI_CORE_REF: ${GMINI_CORE_REF:-v0.3.2}
     container_name: g-mini
     restart: unless-stopped
     env_file:
