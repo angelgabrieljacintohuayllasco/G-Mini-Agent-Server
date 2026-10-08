@@ -1,0 +1,38 @@
+# G-Mini Agent en modo servidor con Docker Compose.
+#
+#   cp docker/.env.example docker/.env      # completa tus GMINI_KEY_*
+#   docker compose -f docker/compose.yaml up -d
+#   docker compose -f docker/compose.yaml exec g-mini gmini status
+#
+# Por defecto el puerto solo se publica en 127.0.0.1. Para usarlo desde otros
+# equipos pon en GMINI_BIND la IP de Tailscale del servidor (ver docs/servidor.md).
+name: g-mini
+
+services:
+  g-mini:
+    image: ghcr.io/angelgabrieljacintohuayllasco/g-mini-agent-server:${GMINI_IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        GMINI_CORE_REF: ${GMINI_CORE_REF:-v0.2.0}
+    container_name: g-mini
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: ${TZ:-America/Lima}
+    ports:
+      - "${GMINI_BIND:-127.0.0.1}:${GMINI_PORT:-8765}:8765"
+    volumes:
+      - g-mini-data:/data
+    stop_grace_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  g-mini-data:
