@@ -3,6 +3,14 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [0.1.1] - 2026-10-08
+
+### Cambiado
+
+- La imagen Docker trae el núcleo v0.3.2 (antes v0.3.0): puede escuchar en la IP de Tailscale con
+  `server.extra_hosts` sin abrirse a toda la red, crea tokens de API con permisos (`POST /api/v1/tokens`)
+  y guarda los registros en el volumen de datos.
+
 ## [0.1.0] - 2026-10-07
 
 Primera versión. Compatible con la API remota v1 del núcleo de G-Mini Agent (v0.2.0 en adelante).
@@ -32,4 +40,5 @@ Primera versión. Compatible con la API remota v1 del núcleo de G-Mini Agent (v
 - Integración continua: estilo, pruebas en Windows y Linux (Python 3.10 a 3.13), wheel y sdist, e imagen
   Docker probada con el núcleo real. Publicación por etiqueta en GitHub Releases y GHCR.
 
+[0.1.1]: https://github.com/angelgabrieljacintohuayllasco/G-Mini-Agent-Server/releases/tag/v0.1.1
 [0.1.0]: https://github.com/angelgabrieljacintohuayllasco/G-Mini-Agent-Server/releases/tag/v0.1.0
