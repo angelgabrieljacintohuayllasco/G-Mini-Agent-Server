@@ -2,8 +2,7 @@
 
 La app de escritorio de G-Mini puede delegar trabajo a otro G-Mini emparejado (un VPS, una Raspberry Pi,
 otra PC): le encarga tareas de fondo y consulta su estado por la API remota v1. La función llegó al núcleo
-después de la v0.2.0 (`backend/core/remote_servers.py`), así que la app debe estar actualizada a la rama
-`main` o a una versión posterior.
+en la v0.3.0 (`backend/core/remote_servers.py`), así que la app debe tener esa versión o una posterior.
 
 ## 1. Preparar el servidor
 

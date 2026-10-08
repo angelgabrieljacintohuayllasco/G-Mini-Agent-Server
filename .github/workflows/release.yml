@@ -10,7 +10,7 @@ permissions:
 env:
   IMAGE: ghcr.io/angelgabrieljacintohuayllasco/g-mini-agent-server
   # Versión del núcleo que lleva la imagen; se cambia con la variable de repositorio GMINI_CORE_REF.
-  GMINI_CORE_REF: ${{ vars.GMINI_CORE_REF || 'v0.2.0' }}
+  GMINI_CORE_REF: ${{ vars.GMINI_CORE_REF || 'v0.3.0' }}
 
 jobs:
   dist:

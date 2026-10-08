@@ -4,7 +4,7 @@
 # una Raspberry Pi o cualquier equipo con Docker.
 #
 #   docker build -f docker/Dockerfile -t g-mini-agent-server .
-#   docker build -f docker/Dockerfile --build-arg GMINI_CORE_REF=v0.2.0 -t g-mini-agent-server .
+#   docker build -f docker/Dockerfile --build-arg GMINI_CORE_REF=v0.3.0 -t g-mini-agent-server .
 #
 # El núcleo se descarga del repositorio principal en una versión fija
 # (GMINI_CORE_REF: etiqueta, rama o commit) e instala solo
@@ -18,7 +18,7 @@ ARG PYTHON_VERSION=3.12
 # ── Código del núcleo en la versión pedida ─────────────────────────────────
 FROM python:${PYTHON_VERSION}-slim AS core-source
 ARG GMINI_CORE_REPO=https://github.com/angelgabrieljacintohuayllasco/G-Mini-Agent.git
-ARG GMINI_CORE_REF=v0.2.0
+ARG GMINI_CORE_REF=v0.3.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -38,9 +38,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=core-source /src/backend/requirements-server.txt /tmp/requirements-server.txt
+# GMINI_VOICE=1 suma Whisper para transcribir (dispositivos con micrófono, palabra de activación).
+ARG GMINI_VOICE=0
 RUN python -m venv /opt/g-mini/venv \
     && /opt/g-mini/venv/bin/pip install --upgrade pip wheel \
-    && /opt/g-mini/venv/bin/pip install -r /tmp/requirements-server.txt
+    && /opt/g-mini/venv/bin/pip install -r /tmp/requirements-server.txt \
+    && if [ "$GMINI_VOICE" = "1" ]; then /opt/g-mini/venv/bin/pip install "faster-whisper>=1.0.0"; fi
 COPY pyproject.toml README.md LICENSE /tmp/cli/
 COPY src /tmp/cli/src
 RUN python -m venv /opt/gmini-cli \
@@ -48,7 +51,7 @@ RUN python -m venv /opt/gmini-cli \
 
 # ── Imagen final ───────────────────────────────────────────────────────────
 FROM python:${PYTHON_VERSION}-slim AS runtime
-ARG GMINI_CORE_REF=v0.2.0
+ARG GMINI_CORE_REF=v0.3.0
 LABEL org.opencontainers.image.title="G-Mini Agent Server" \
       org.opencontainers.image.description="Núcleo de G-Mini Agent en modo servidor, con la CLI gmini" \
       org.opencontainers.image.source="https://github.com/angelgabrieljacintohuayllasco/G-Mini-Agent-Server" \

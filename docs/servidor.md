@@ -7,7 +7,7 @@ tareas programadas. Hay dos formas de instalarlo:
 | | Instalador oficial (Linux) | Docker |
 |---|---|---|
 | Requisitos | systemd, git, curl | Docker con Compose v2 |
-| Versión del núcleo | rama `main` (se actualiza al volver a ejecutarlo) | etiqueta fija (`GMINI_CORE_REF`, por defecto `v0.2.0`) |
+| Versión del núcleo | rama `main` (se actualiza al volver a ejecutarlo) | etiqueta fija (`GMINI_CORE_REF`, por defecto `v0.3.0`) |
 | Privilegios | ninguno (servicio de usuario) | usuario sin root dentro del contenedor |
 | Datos | `~/.local/share/g-mini` | volumen `/data` |
 | API keys | `~/.config/g-mini/env` | `docker/.env` |
@@ -93,9 +93,11 @@ La imagen:
 Para construirla con otra versión del núcleo:
 
 ```bash
-GMINI_CORE_REF=v0.2.0 docker compose -f docker/compose.yaml build
+GMINI_CORE_REF=v0.3.0 docker compose -f docker/compose.yaml build
 # o sin compose
-docker build -f docker/Dockerfile --build-arg GMINI_CORE_REF=v0.2.0 -t g-mini-agent-server .
+docker build -f docker/Dockerfile --build-arg GMINI_CORE_REF=v0.3.0 -t g-mini-agent-server .
+# con reconocimiento de voz (Whisper):
+docker build -f docker/Dockerfile --build-arg GMINI_CORE_REF=v0.3.0 --build-arg GMINI_VOICE=1 -t g-mini-agent-server .
 ```
 
 Si en vez del volumen usas una carpeta del host, dale permisos al usuario del contenedor:

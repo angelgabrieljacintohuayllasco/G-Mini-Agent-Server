@@ -73,7 +73,7 @@ docker compose -f docker/compose.yaml up -d
 docker compose -f docker/compose.yaml exec g-mini gmini status
 ```
 
-The image pins the core to a release tag (`GMINI_CORE_REF`, default `v0.2.0`), installs only
+The image pins the core to a release tag (`GMINI_CORE_REF`, default `v0.3.0`), installs only
 `backend/requirements-server.txt`, runs as uid 10001, keeps data in the `/data` volume (`GMINI_HOME`) and
 checks `/api/v1/health`. [Tailscale](https://tailscale.com) is the recommended way to reach the server
 from other networks; for a public domain use a TLS reverse proxy (see [docs/servidor.md](docs/servidor.md)).
